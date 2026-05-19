@@ -5,293 +5,145 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prime Gmail Earnings</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #0b0f19; color: white; margin-bottom: 90px; overflow-x: hidden; }
-        
-        .app-banner {
-            background: linear-gradient(145deg, #4f46e5, #9333ea);
-            border-radius: 30px;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-        }
-
+        .app-banner { background: linear-gradient(145deg, #4f46e5, #9333ea); border-radius: 30px; position: relative; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4); }
         .card-gradient { background: #161b2c; border: 1px solid #2d3748; transition: 0.3s; }
-        .btn-premium {
-            background: linear-gradient(90deg, #fbbf24, #f59e0b);
-            color: #000;
-            font-weight: 800;
-            letter-spacing: 1px;
-            box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3);
-        }
-
+        .btn-premium { background: linear-gradient(90deg, #fbbf24, #f59e0b); color: #000; font-weight: 800; letter-spacing: 1px; box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3); }
         .bottom-nav { background: rgba(22, 27, 44, 0.95); backdrop-filter: blur(10px); border-top: 1px solid #2d3748; }
-        
         .section { display: none; }
         .section.active { display: block; animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
         input { background: #0b0f19 !important; border: 1px solid #2d3748 !important; color: white !important; }
-        input:focus { border-color: #4f46e5 !important; outline: none; }
-        
-        .notice-btn {
-            background: #ef4444;
-            padding: 5px 15px;
-            border-radius: 50px;
-            font-size: 12px;
-            font-weight: bold;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
+        .notice-btn { background: #ef4444; padding: 5px 15px; border-radius: 50px; font-size: 12px; font-weight: bold; animation: pulse 2s infinite; }
     </style>
 </head>
 <body>
 
-    <!-- কনফিগারেশন -->
-    <script>
-        const BOT_TOKEN = '8717099685:AAE5cQRGGyH-foBpD-Y4VYC_UiD3xL1yElA';
-        const CHAT_ID = '8352297183';
-    </script>
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBOXjOvNwx fbiT7k_h5",
+        authDomain: "sell-14df3.firebaseapp.com",
+        databaseURL: "https://sell-14df3-default-rtdb.firebaseio.com",
+        projectId: "sell-14df3",
+        storageBucket: "sell-14df3.firebasestorage.app",
+        messagingSenderId: "694027361200",
+        appId: "1:694027361200:web:74277e9282363574277e92"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
 
-    <!-- Top Bar -->
+    let userId = localStorage.getItem('prime_uid') || 'user_' + Math.floor(Math.random() * 1000000);
+    localStorage.setItem('prime_uid', userId);
+
+    function loadData() {
+        database.ref('users/' + userId).on('value', (snapshot) => {
+            const data = snapshot.val() || { balance: 0, dailyCount: 0 };
+            document.getElementById('balance').innerText = (data.balance || 0).toFixed(2);
+            document.getElementById('daily-done').innerText = data.dailyCount || 0;
+        });
+        database.ref('history/' + userId).on('value', (snapshot) => { renderHistory(snapshot.val()); });
+    }
+</script>
+
     <div class="p-4 flex justify-between items-center text-sm">
         <span class="opacity-70"><i class="fas fa-bolt text-yellow-400 mr-1"></i> Prime Earnings</span>
-        <button onclick="showNotice()" class="notice-btn uppercase"><i class="fas fa-bell mr-1"></i> নোটিশ</button>
+        <button onclick="showNotice()" class="notice-btn uppercase">নোটিশ</button>
         <span id="current-time" class="opacity-70">12:00 PM</span>
     </div>
 
-    <!-- HOME SECTION -->
     <div id="home" class="section active p-4">
-        <div class="app-banner p-6 mb-8 text-center relative">
-            <div class="relative z-10">
-                <i class="fas fa-envelope-open-text text-5xl text-yellow-300 mb-4 block"></i>
-                <h1 class="text-2xl font-black italic tracking-tighter mb-2">PRIME DIGITAL EARNINGS</h1>
-                <p class="text-[10px] opacity-80 uppercase tracking-widest">Earn Money by Selling Gmail</p>
-            </div>
+        <div class="app-banner p-6 mb-8 text-center">
+            <i class="fas fa-envelope-open-text text-5xl text-yellow-300 mb-4 block"></i>
+            <h1 class="text-2xl font-black italic tracking-tighter mb-2 uppercase">PRIME DIGITAL EARNINGS</h1>
+            <p class="text-[10px] opacity-80 uppercase tracking-widest">Sell Gmail & Earn Money</p>
         </div>
-
         <div class="grid grid-cols-2 gap-4 mb-8">
             <div class="card-gradient p-5 rounded-3xl">
-                <p class="text-xs opacity-50 font-bold">BALANCE</p>
+                <p class="text-xs opacity-50 font-bold uppercase">Balance</p>
                 <h3 class="text-2xl font-black mt-1">৳ <span id="balance">0.00</span></h3>
             </div>
             <div class="card-gradient p-5 rounded-3xl text-blue-400">
-                <p class="text-xs opacity-50 font-bold text-white">DAILY SUBMIT</p>
+                <p class="text-xs opacity-50 font-bold text-white uppercase">Daily Submit</p>
                 <h3 class="text-2xl font-black mt-1" id="daily-done">0</h3>
             </div>
         </div>
-
-        <button onclick="showSection('sell')" class="w-full btn-premium p-5 rounded-3xl flex items-center justify-center gap-3 text-lg">
-            <i class="fas fa-plus-circle"></i> SELL GMAIL NOW (7 TK)
-        </button>
-
-        <div class="mt-6 card-gradient p-4 rounded-3xl flex items-center justify-between opacity-80 cursor-pointer" onclick="window.location.href='https://t.me/Gmailsaleofficial'">
-            <div class="flex items-center gap-3">
-                <i class="fab fa-telegram text-2xl text-blue-400"></i>
-                <span class="text-xs font-bold">Join Official Telegram</span>
-            </div>
-            <i class="fas fa-external-link-alt text-xs"></i>
-        </div>
+        <button onclick="showSection('sell')" class="w-full btn-premium p-5 rounded-3xl text-lg font-bold"><i class="fas fa-plus-circle"></i> SELL GMAIL NOW (7 TK)</button>
     </div>
 
-    <!-- SELL SECTION -->
     <div id="sell" class="section p-4">
-        <div class="card-gradient p-6 rounded-[35px]">
-            <h2 class="text-xl font-bold text-center mb-2">📥 জিমেইল সাবমিট করুন</h2>
-            
-            <div class="bg-red-900/30 border border-red-500/30 p-4 rounded-2xl mb-6 text-center">
-                <p class="text-[12px] text-red-300 leading-relaxed font-bold">
-                    ⚠️ অবশ্যই জিমেইলের পাসওয়ার্ড <span class="text-yellow-400 text-sm">@tamim2050</span> ব্যবহার করবেন। অন্য পাসওয়ার্ড দিলে পেমেন্ট পাবেন না।
-                </p>
-            </div>
-
-            <div class="space-y-4">
-                <div>
-                    <label class="text-[10px] opacity-50 ml-1 uppercase font-bold tracking-widest">Gmail Address</label>
-                    <input id="gmail-addr" type="email" placeholder="example@gmail.com" class="w-full mt-1 p-4 rounded-2xl">
-                </div>
-                
-                <div>
-                    <label class="text-[10px] opacity-50 ml-1 uppercase font-bold tracking-widest">Password (Must use @tamim2050)</label>
-                    <input id="gmail-pass" type="text" value="@tamim2050" class="w-full mt-1 p-4 rounded-2xl text-yellow-400">
-                </div>
-
-                <button onclick="handleSell()" id="sell-btn" class="w-full btn-premium py-4 rounded-2xl mt-4 shadow-xl text-lg">SUBMIT FOR REVIEW</button>
-                <button onclick="showSection('home')" class="w-full text-xs opacity-40 font-bold mt-4 uppercase">Back to Home</button>
-            </div>
+        <div class="card-gradient p-6 rounded-[35px] space-y-4">
+            <h2 class="text-xl font-bold text-center">📥 জিমেইল সাবমিট</h2>
+            <input id="gmail-addr" type="email" placeholder="example@gmail.com" class="w-full p-4 rounded-2xl">
+            <input id="gmail-pass" type="text" value="@tamim2050" class="w-full p-4 rounded-2xl text-yellow-400">
+            <button onclick="handleSell()" id="sell-btn" class="w-full btn-premium py-4 rounded-2xl shadow-xl">SUBMIT FOR REVIEW</button>
+            <button onclick="showSection('home')" class="w-full text-xs opacity-40 uppercase">Back</button>
         </div>
     </div>
 
-    <!-- WITHDRAW SECTION -->
     <div id="withdraw" class="section p-4">
-        <h2 class="text-2xl font-bold mb-6 ml-2 italic">Withdraw Money</h2>
+        <h2 class="text-2xl font-bold mb-6 italic">Withdraw Money</h2>
         <div class="card-gradient p-6 rounded-[35px] space-y-4">
             <select id="w-method" class="w-full p-4 rounded-2xl bg-[#0b0f19] border border-[#2d3748]">
                 <option value="Bkash">Bkash</option>
                 <option value="Nagad">Nagad</option>
-                <option value="Rocket">Rocket</option>
             </select>
             <input id="w-amount" type="number" placeholder="Amount (Min 50)" class="w-full p-4 rounded-2xl">
             <input id="w-number" type="number" placeholder="Phone Number" class="w-full p-4 rounded-2xl">
-            <button onclick="handleWithdraw()" id="withdraw-btn" class="w-full btn-premium py-4 rounded-2xl shadow-xl">WITHDRAW REQUEST</button>
+            <button onclick="handleWithdraw()" class="w-full btn-premium py-4 rounded-2xl shadow-xl">WITHDRAW REQUEST</button>
         </div>
     </div>
 
-    <!-- HISTORY SECTION -->
     <div id="history" class="section p-4">
-        <h2 class="text-2xl font-bold mb-6 ml-2 italic">History</h2>
-        <div id="history-list" class="space-y-3">
-            <p class="text-center opacity-30 mt-20">No history found</p>
-        </div>
+        <h2 class="text-2xl font-bold mb-6 italic">History</h2>
+        <div id="history-list" class="space-y-3"></div>
     </div>
 
-    <!-- BOTTOM NAVBAR -->
     <div class="bottom-nav fixed bottom-0 left-0 right-0 p-4 flex justify-around items-center">
-        <button onclick="showSection('home')" class="nav-item text-indigo-500 flex flex-col items-center gap-1">
-            <i class="fas fa-home text-xl"></i><span class="text-[9px] font-bold">HOME</span>
-        </button>
-        <button onclick="showSection('sell')" class="nav-item opacity-40 flex flex-col items-center gap-1">
-            <i class="fas fa-envelope text-xl"></i><span class="text-[9px] font-bold">SELL</span>
-        </button>
-        <button onclick="showSection('withdraw')" class="nav-item opacity-40 flex flex-col items-center gap-1">
-            <i class="fas fa-wallet text-xl"></i><span class="text-[9px] font-bold">PAYOUT</span>
-        </button>
-        <button onclick="showSection('history')" class="nav-item opacity-40 flex flex-col items-center gap-1">
-            <i class="fas fa-list-alt text-xl"></i><span class="text-[9px] font-bold">HISTORY</span>
-        </button>
+        <button onclick="showSection('home')" class="nav-item flex flex-col items-center"><i class="fas fa-home"></i><span class="text-[9px]">HOME</span></button>
+        <button onclick="showSection('sell')" class="nav-item flex flex-col items-center"><i class="fas fa-envelope"></i><span class="text-[9px]">SELL</span></button>
+        <button onclick="showSection('withdraw')" class="nav-item flex flex-col items-center"><i class="fas fa-wallet"></i><span class="text-[9px]">PAYOUT</span></button>
+        <button onclick="showSection('history')" class="nav-item flex flex-col items-center"><i class="fas fa-list-alt"></i><span class="text-[9px]">HISTORY</span></button>
     </div>
 
-    <script>
-        let db = JSON.parse(localStorage.getItem('prime_v3_db')) || {
-            balance: 0, dailyCount: 0, lastDate: "", history: []
-        };
-
-        function showNotice() {
-            alert("🌟 আসসালামু আলাইকুম! 🌟\n\n✅ সততার সাথে কাজ করেন, ১০০% পেমেন্ট পাবেন।\n\n💰 প্রতি জিমেইল এর রেট ৭ টাকা।\n💳 মিনিমাম উইথড্র ৫০ টাকা।\n\n⏱️ উইথড্র রিকোয়েস্ট দেওয়ার ২-৩ ঘন্টার ভিতরে টাকা পেয়ে যাবেন ইনশাআল্লাহ।। 🚀");
+<script>
+    function showNotice() { database.ref('notice').once('value', (snap) => { alert(snap.val() || "🌟 আসসালামু আলাইকুম!"); }); }
+    function showSection(id) { document.querySelectorAll('.section').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); if(id === 'history') loadData(); }
+    function handleSell() {
+        let email = document.getElementById('gmail-addr').value;
+        let pass = document.getElementById('gmail-pass').value;
+        if(!email) return alert("ইমেইল দিন!");
+        document.getElementById('sell-btn').innerText = "Processing...";
+        const id = Date.now();
+        database.ref('tasks/' + id).set({ user: userId, email: email, pass: pass, status: 'Pending', time: new Date().toLocaleString() });
+        database.ref('history/' + userId + '/' + id).set({ info: email, amount: 7, type: 'SELL', status: 'Pending', date: new Date().toLocaleString() });
+        alert("সফলভাবে সাবমিট হয়েছে!"); location.reload();
+    }
+    function handleWithdraw() {
+        let amount = parseFloat(document.getElementById('w-amount').value);
+        let num = document.getElementById('w-number').value;
+        if(amount < 50) return alert("মিনিমাম ৫০ টাকা!");
+        const id = Date.now();
+        database.ref('withdraws/' + id).set({ user: userId, amount: amount, num: num, status: 'Pending', time: new Date().toLocaleString() });
+        database.ref('history/' + userId + '/' + id).set({ info: num, amount: amount, type: 'WITHDRAW', status: 'Pending', date: new Date().toLocaleString() });
+        alert("উইথড্র রিকোয়েস্ট পাঠানো হয়েছে!"); location.reload();
+    }
+    function renderHistory(data) {
+        const list = document.getElementById('history-list'); list.innerHTML = "";
+        for(let id in data) {
+            const item = data[id];
+            list.innerHTML += `<div class="card-gradient p-4 rounded-2xl flex justify-between items-center border-l-4 ${item.status==='Success'?'border-green-500':'border-yellow-500'}">
+                <div><p class="text-xs font-bold">${item.info}</p><p class="text-[8px] opacity-40">${item.date}</p></div>
+                <div class="text-right"><p class="font-bold text-sm">${item.type==='SELL'?'+':'-'}${item.amount} TK</p><p class="text-[8px] font-bold text-yellow-500">${item.status}</p></div>
+            </div>`;
         }
-
-        function updateUI() {
-            document.getElementById('balance').innerText = db.balance.toFixed(2);
-            document.getElementById('daily-done').innerText = db.dailyCount;
-            document.getElementById('current-time').innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            localStorage.setItem('prime_v3_db', JSON.stringify(db));
-        }
-
-        function showSection(id) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            if(id === 'history') renderHistory();
-        }
-
-        // টেলিগ্রামে মেসেজ পাঠানোর ফাংশন
-        async function sendTelegram(message) {
-            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(message)}`;
-            try {
-                await fetch(url);
-                return true;
-            } catch (e) {
-                return false;
-            }
-        }
-
-        async function handleSell() {
-            let email = document.getElementById('gmail-addr').value;
-            let pass = document.getElementById('gmail-pass').value;
-            let today = new Date().toLocaleDateString();
-
-            if (!email || !pass) return alert('সবগুলো বক্স পূরণ করুন!');
-            if (!email.includes('@')) return alert('সঠিক জিমেইল এড্রেস দিন!');
-            if (pass !== "@tamim2050") return alert('ভুল পাসওয়ার্ড! অবশ্যই @tamim2050 ব্যবহার করতে হবে।');
-
-            document.getElementById('sell-btn').innerText = "Sending...";
-
-            const msg = `🔔 New Gmail Submitted!\n📧 Email: ${email}\n🔑 Pass: ${pass}\n📅 Date: ${new Date().toLocaleString()}`;
-            
-            const success = await sendTelegram(msg);
-
-            if(success) {
-                if (db.lastDate !== today) { db.dailyCount = 0; db.lastDate = today; }
-                db.dailyCount += 1;
-                db.history.unshift({
-                    type: 'SELL', 
-                    info: email, 
-                    amount: 7, 
-                    date: new Date().toLocaleString(), 
-                    status: 'Pending'
-                });
-                updateUI();
-                alert('✅ সফলভাবে সাবমিট হয়েছে! এডমিন চেক করার পর ব্যালেন্স যোগ হবে।');
-                document.getElementById('gmail-addr').value = "";
-                showSection('home');
-            } else {
-                alert('ভুল হয়েছে! দয়া করে ইন্টারনেট কানেকশন বা বট টোকেন চেক করুন।');
-            }
-            document.getElementById('sell-btn').innerText = "SUBMIT FOR REVIEW";
-        }
-
-        async function handleWithdraw() {
-            let amount = parseFloat(document.getElementById('w-amount').value);
-            let num = document.getElementById('w-number').value;
-            let method = document.getElementById('w-method').value;
-
-            if (!amount || !num) return alert('সবগুলো বক্স পূরণ করুন!');
-            if (amount < 50) return alert('মিনিমাম উইথড্র ৫০ টাকা!');
-            if (amount > db.balance) return alert('আপনার ব্যালেন্স পর্যাপ্ত নয়!');
-            
-            document.getElementById('withdraw-btn').innerText = "Sending...";
-            const msg = `💰 Withdraw Request!\n👤 Method: ${method}\n📞 Number: ${num}\n💵 Amount: ${amount} TK`;
-
-            const success = await sendTelegram(msg);
-
-            if(success) {
-                db.balance -= amount;
-                db.history.unshift({
-                    type: 'WITHDRAW', 
-                    info: num, 
-                    amount: amount, 
-                    date: new Date().toLocaleString(), 
-                    status: 'Pending'
-                });
-                updateUI();
-                alert('🚀 উইথড্র রিকোয়েস্ট পাঠানো হয়েছে!');
-                showSection('home');
-            } else {
-                alert('ভুল হয়েছে!');
-            }
-            document.getElementById('withdraw-btn').innerText = "WITHDRAW REQUEST";
-        }
-
-        function renderHistory() {
-            const list = document.getElementById('history-list');
-            if (db.history.length === 0) {
-                list.innerHTML = '<p class="text-center opacity-30 mt-20">No history found</p>';
-                return;
-            }
-            list.innerHTML = db.history.map(item => `
-                <div class="card-gradient p-4 rounded-2xl flex justify-between items-center border-l-4 border-yellow-500">
-                    <div class="max-w-[70%]">
-                        <p class="text-[11px] font-bold truncate">${item.info}</p>
-                        <p class="text-[8px] opacity-40 uppercase mt-1">${item.date}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="font-bold text-sm ${item.type === 'SELL' ? 'text-blue-400' : 'text-red-400'}">${item.type === 'SELL' ? '+' : '-'}${item.amount} TK</p>
-                        <p class="text-[8px] font-bold text-yellow-500 uppercase">${item.status}</p>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        updateUI();
-        setInterval(() => {
-            document.getElementById('current-time').innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        }, 1000);
-    </script>
+    }
+    loadData();
+    setInterval(() => { document.getElementById('current-time').innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); }, 1000);
+</script>
 </body>
 </html>
