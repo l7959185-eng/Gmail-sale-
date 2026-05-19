@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>Prime Admin Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        body { background-color: #0b0f19; color: white; font-family: sans-serif; }
+        .card { background: #161b2c; border: 1px solid #2d3748; border-radius: 20px; padding: 20px; margin-bottom: 15px; }
+        input, textarea { background: #0b0f19 !important; border: 1px solid #2d3748 !important; color: white !important; }
+        #admin-panel { display: none; }
+    </style>
+</head>
+<body class="p-4">
+    <div id="login-section" class="max-w-md mx-auto mt-20 card text-center">
+        <h2 class="text-xl font-bold mb-4 uppercase">Admin Login</h2>
+        <input id="admin-pin" type="password" placeholder="ENTER PIN" class="w-full p-4 rounded-xl mb-4 text-center">
+        <button onclick="checkLogin()" class="w-full bg-indigo-600 py-4 rounded-xl font-bold">LOG IN</button>
+    </div>
+
+    <div id="admin-panel" class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-black text-indigo-400 mb-6">ADMIN CONTROL</h1>
+        <div class="card">
+            <h3 class="font-bold mb-2">App Notice Setup</h3>
+            <textarea id="app-notice" class="w-full p-4 rounded-xl mb-4 h-20"></textarea>
+            <button onclick="updateNotice()" class="bg-indigo-600 px-8 py-2 rounded-xl font-bold">UPDATE NOTICE</button>
+        </div>
+        <div id="list" class="space-y-4"></div>
+    </div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBOXjOvNwx fbiT7k_h5",
+        authDomain: "sell-14df3.firebaseapp.com",
+        databaseURL: "https://sell-14df3-default-rtdb.firebaseio.com",
+        projectId: "sell-14df3",
+        storageBucket: "sell-14df3.firebasestorage.app",
+        messagingSenderId: "694027361200",
+        appId: "1:694027361200:web:74277e9282363574277e92"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    function checkLogin() {
+        if(document.getElementById('admin-pin').value === "258025") {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('admin-panel').style.display = 'block';
+            loadData();
+        } else alert("Wrong PIN!");
+    }
+
+    function loadData() {
+        database.ref('tasks').on('value', snap => {
+            const data = snap.val();
+            const div = document.getElementById('list'); div.innerHTML = "<h3>Gmail Requests</h3>";
+            for(let id in data) {
+                if(data[id].status === 'Pending') {
+                    div.innerHTML += `<div class="card">
+                        <p class="text-blue-400 font-bold">${data[id].email}</p>
+                        <p class="text-yellow-500">${data[id].pass}</p>
+                        <button onclick="approveG('${id}', '${data[id].user}')" class="bg-green-600 px-6 py-2 rounded-xl mt-2 font-bold">Approve</button>
+                    </div>`;
+                }
+            }
+        });
+        database.ref('notice').once('value', snap => { document.getElementById('app-notice').value = snap.val() || ""; });
+    }
+
+    function approveG(tid, uid) {
+        database.ref('users/' + uid).transaction(c => {
+            if(!c) return {balance: 7, dailyCount: 1};
+            return {balance: c.balance + 7, dailyCount: c.dailyCount + 1};
+        });
+        database.ref('tasks/' + tid).update({status: 'Success'});
+        database.ref('history/' + uid + '/' + tid).update({status: 'Success'});
+    }
+
+    function updateNotice() {
+        database.ref('notice').set(document.getElementById('app-notice').value).then(() => alert("Notice Updated!"));
+    }
+</script>
+</body>
+</html>
