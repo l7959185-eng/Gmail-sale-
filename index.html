@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="bn">
 <head>
@@ -40,17 +38,28 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    let userId = localStorage.getItem('prime_uid') || 'user_' + Math.floor(Math.random() * 1000000);
-    localStorage.setItem('prime_uid', userId);
+    // ইউনিক ইউজার আইডি জেনারেটর (প্রতিটি ডিভাইসের জন্য আলাদা)
+    let userId = localStorage.getItem('prime_uid');
+    if (!userId) {
+        userId = 'user_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+        localStorage.setItem('prime_uid', userId);
+    }
 
-    let currentBalance = 0; // গ্লোবাল ভেরিয়েবল ব্যালেন্স ট্র্যাক করার জন্য
+    let currentBalance = 0;
 
     function loadData() {
+        // শুধুমাত্র বর্তমান ইউজার আইডির ডাটা রিড করা হবে
         database.ref('users/' + userId).on('value', (snapshot) => {
-            const data = snapshot.val() || { balance: 0, dailyCount: 0 };
-            currentBalance = data.balance || 0; // আপডেট ব্যালেন্স
-            document.getElementById('balance').innerText = currentBalance.toFixed(2);
-            document.getElementById('daily-done').innerText = data.dailyCount || 0;
+            const data = snapshot.val();
+            if (data) {
+                currentBalance = data.balance || 0;
+                document.getElementById('balance').innerText = currentBalance.toFixed(2);
+                document.getElementById('daily-done').innerText = data.dailyCount || 0;
+            } else {
+                // নতুন ইউজার হলে ব্যালেন্স ০ দেখাবে
+                document.getElementById('balance').innerText = "0.00";
+                document.getElementById('daily-done').innerText = "0";
+            }
         });
         database.ref('history/' + userId).on('value', (snapshot) => { renderHistory(snapshot.val()); });
     }
@@ -79,19 +88,20 @@
                 <h3 class="text-2xl font-black mt-1" id="daily-done">0</h3>
             </div>
         </div>
+        
         <button onclick="showSection('sell')" class="w-full btn-premium p-5 rounded-3xl text-lg font-bold"><i class="fas fa-plus-circle"></i> SELL GMAIL NOW (7 TK)</button>
         
-        <!-- Telegram Links Added Here -->
         <div class="flex gap-4 mt-6">
             <a href="https://t.me/+eMTK4ZG-tupjMjU1" target="_blank" class="flex-1 bg-[#229ED9] p-4 rounded-2xl text-center text-xs font-bold flex flex-col items-center gap-1 shadow-lg">
-                <i class="fab fa-telegram text-xl"></i>
-                SUPPORT
+                <i class="fab fa-telegram text-xl"></i> SUPPORT
             </a>
             <a href="https://t.me/Gmailsaleofficial" target="_blank" class="flex-1 bg-[#229ED9] p-4 rounded-2xl text-center text-xs font-bold flex flex-col items-center gap-1 shadow-lg">
-                <i class="fas fa-bullhorn text-xl"></i>
-                OFFICIAL
+                <i class="fas fa-bullhorn text-xl"></i> OFFICIAL
             </a>
         </div>
+        
+        <!-- ইউজার আইডি দেখার জন্য ছোট করে নিচে দেওয়া হলো (ভেরিফিকেশনের জন্য) -->
+        <p class="text-[8px] text-center mt-4 opacity-20">Your ID: <script>document.write(userId);</script></p>
     </div>
 
     <!-- Sell Section -->
@@ -148,17 +158,31 @@
         if(!email) return alert("ইমেইল দিন!");
         
         document.getElementById('sell-btn').innerText = "Processing...";
-        const id = Date.now();
+        const taskId = Date.now();
         
-        // টাস্ক সাবমিট (অ্যাডমিন পরে এপ্রুভ করলে টাকা অ্যাড হবে)
-        database.ref('tasks/' + id).set({ user: userId, email: email, pass: pass, status: 'Pending', time: new Date().toLocaleString() });
-        database.ref('history/' + userId + '/' + id).set({ info: email, amount: 7, type: 'SELL', status: 'Pending', date: new Date().toLocaleString() });
+        // টাস্ক সাবমিট - এখানে userId পাঠানো হচ্ছে যাতে অ্যাডমিন বুঝতে পারে কার ব্যালেন্স বাড়াতে হবে
+        database.ref('tasks/' + taskId).set({ 
+            user: userId, 
+            email: email, 
+            pass: pass, 
+            status: 'Pending', 
+            time: new Date().toLocaleString() 
+        });
+
+        // ইউজারের ব্যক্তিগত হিস্টোরিতে সেভ
+        database.ref('history/' + userId + '/' + taskId).set({ 
+            info: email, 
+            amount: 7, 
+            type: 'SELL', 
+            status: 'Pending', 
+            date: new Date().toLocaleString() 
+        });
         
-        alert("সফলভাবে সাবমিট হয়েছে! অ্যাডমিন চেক করে ব্যালেন্স যোগ করে দিবে।"); 
-        location.reload();
+        alert("সফলভাবে সাবমিট হয়েছে! অ্যাডমিন চেক করে আপনার আইডিতে ব্যালেন্স যোগ করে দিবে।"); 
+        showSection('home');
+        document.getElementById('sell-btn').innerText = "SUBMIT FOR REVIEW";
     }
 
-    // উইথড্র ফাংশন (যেখানে ব্যালেন্স কেটে নেওয়া হবে)
     function handleWithdraw() {
         let amount = parseFloat(document.getElementById('w-amount').value);
         let num = document.getElementById('w-number').value;
@@ -166,11 +190,7 @@
 
         if(!amount || amount < 50) return alert("মিনিমাম ৫০ টাকা উইথড্র করুন!");
         if(!num) return alert("ফোন নাম্বার দিন!");
-        
-        // ব্যালেন্স চেক
-        if(amount > currentBalance) {
-            return alert("আপনার পর্যাপ্ত ব্যালেন্স নেই! বর্তমান ব্যালেন্স: " + currentBalance + " TK");
-        }
+        if(amount > currentBalance) return alert("আপনার পর্যাপ্ত ব্যালেন্স নেই!");
 
         const btn = document.getElementById('withdraw-btn');
         btn.disabled = true;
@@ -179,11 +199,10 @@
         const id = Date.now();
         const newBalance = currentBalance - amount;
 
-        // ১. ডাটাবেসে ব্যালেন্স আপডেট করা (কমানো)
+        // ব্যালেন্স কমানো (শুধুমাত্র এই ইউজারের জন্য)
         database.ref('users/' + userId).update({
             balance: newBalance
         }).then(() => {
-            // ২. উইথড্র রিকোয়েস্ট লিস্টে পাঠানো
             database.ref('withdraws/' + id).set({ 
                 user: userId, 
                 amount: amount, 
@@ -193,7 +212,6 @@
                 time: new Date().toLocaleString() 
             });
 
-            // ৩. হিস্টোরিতে সেভ করা
             database.ref('history/' + userId + '/' + id).set({ 
                 info: method + ": " + num, 
                 amount: amount, 
@@ -202,10 +220,8 @@
                 date: new Date().toLocaleString() 
             });
 
-            alert("উইথড্র রিকোয়েস্ট সফল হয়েছে! " + amount + " টাকা কেটে নেওয়া হয়েছে।");
+            alert("উইথড্র রিকোয়েস্ট সফল! ব্যালেন্স কাটা হয়েছে।");
             showSection('home');
-        }).catch(err => {
-            alert("কিছু সমস্যা হয়েছে, আবার চেষ্টা করুন।");
             btn.disabled = false;
             btn.innerText = "WITHDRAW REQUEST";
         });
