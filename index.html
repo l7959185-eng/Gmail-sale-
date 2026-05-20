@@ -25,6 +25,7 @@
 <body>
 
 <script>
+    // Firebase Configuration
     const firebaseConfig = {
         apiKey: "AIzaSyBOXjOvNwx fbiT7k_h5",
         authDomain: "sell-14df3.firebaseapp.com",
@@ -40,10 +41,13 @@
     let userId = localStorage.getItem('prime_uid') || 'user_' + Math.floor(Math.random() * 1000000);
     localStorage.setItem('prime_uid', userId);
 
+    let currentBalance = 0; // গ্লোবাল ভেরিয়েবল ব্যালেন্স ট্র্যাক করার জন্য
+
     function loadData() {
         database.ref('users/' + userId).on('value', (snapshot) => {
             const data = snapshot.val() || { balance: 0, dailyCount: 0 };
-            document.getElementById('balance').innerText = (data.balance || 0).toFixed(2);
+            currentBalance = data.balance || 0; // আপডেট ব্যালেন্স
+            document.getElementById('balance').innerText = currentBalance.toFixed(2);
             document.getElementById('daily-done').innerText = data.dailyCount || 0;
         });
         database.ref('history/' + userId).on('value', (snapshot) => { renderHistory(snapshot.val()); });
@@ -56,6 +60,7 @@
         <span id="current-time" class="opacity-70">12:00 PM</span>
     </div>
 
+    <!-- Home Section -->
     <div id="home" class="section active p-4">
         <div class="app-banner p-6 mb-8 text-center">
             <i class="fas fa-envelope-open-text text-5xl text-yellow-300 mb-4 block"></i>
@@ -75,6 +80,7 @@
         <button onclick="showSection('sell')" class="w-full btn-premium p-5 rounded-3xl text-lg font-bold"><i class="fas fa-plus-circle"></i> SELL GMAIL NOW (7 TK)</button>
     </div>
 
+    <!-- Sell Section -->
     <div id="sell" class="section p-4">
         <div class="card-gradient p-6 rounded-[35px] space-y-4">
             <h2 class="text-xl font-bold text-center">📥 জিমেইল সাবমিট</h2>
@@ -85,6 +91,7 @@
         </div>
     </div>
 
+    <!-- Withdraw Section -->
     <div id="withdraw" class="section p-4">
         <h2 class="text-2xl font-bold mb-6 italic">Withdraw Money</h2>
         <div class="card-gradient p-6 rounded-[35px] space-y-4">
@@ -94,15 +101,17 @@
             </select>
             <input id="w-amount" type="number" placeholder="Amount (Min 50)" class="w-full p-4 rounded-2xl">
             <input id="w-number" type="number" placeholder="Phone Number" class="w-full p-4 rounded-2xl">
-            <button onclick="handleWithdraw()" class="w-full btn-premium py-4 rounded-2xl shadow-xl">WITHDRAW REQUEST</button>
+            <button onclick="handleWithdraw()" id="withdraw-btn" class="w-full btn-premium py-4 rounded-2xl shadow-xl">WITHDRAW REQUEST</button>
         </div>
     </div>
 
+    <!-- History Section -->
     <div id="history" class="section p-4">
         <h2 class="text-2xl font-bold mb-6 italic">History</h2>
         <div id="history-list" class="space-y-3"></div>
     </div>
 
+    <!-- Navigation -->
     <div class="bottom-nav fixed bottom-0 left-0 right-0 p-4 flex justify-around items-center">
         <button onclick="showSection('home')" class="nav-item flex flex-col items-center"><i class="fas fa-home"></i><span class="text-[9px]">HOME</span></button>
         <button onclick="showSection('sell')" class="nav-item flex flex-col items-center"><i class="fas fa-envelope"></i><span class="text-[9px]">SELL</span></button>
@@ -112,28 +121,87 @@
 
 <script>
     function showNotice() { database.ref('notice').once('value', (snap) => { alert(snap.val() || "🌟 আসসালামু আলাইকুম!"); }); }
-    function showSection(id) { document.querySelectorAll('.section').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); if(id === 'history') loadData(); }
+    
+    function showSection(id) { 
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active')); 
+        document.getElementById(id).classList.add('active'); 
+        if(id === 'history') loadData(); 
+    }
+
     function handleSell() {
         let email = document.getElementById('gmail-addr').value;
         let pass = document.getElementById('gmail-pass').value;
         if(!email) return alert("ইমেইল দিন!");
+        
         document.getElementById('sell-btn').innerText = "Processing...";
         const id = Date.now();
+        
+        // টাস্ক সাবমিট (অ্যাডমিন পরে এপ্রুভ করলে টাকা অ্যাড হবে)
         database.ref('tasks/' + id).set({ user: userId, email: email, pass: pass, status: 'Pending', time: new Date().toLocaleString() });
         database.ref('history/' + userId + '/' + id).set({ info: email, amount: 7, type: 'SELL', status: 'Pending', date: new Date().toLocaleString() });
-        alert("সফলভাবে সাবমিট হয়েছে!"); location.reload();
+        
+        alert("সফলভাবে সাবমিট হয়েছে! অ্যাডমিন চেক করে ব্যালেন্স যোগ করে দিবে।"); 
+        location.reload();
     }
+
+    // উইথড্র ফাংশন (যেখানে ব্যালেন্স কেটে নেওয়া হবে)
     function handleWithdraw() {
         let amount = parseFloat(document.getElementById('w-amount').value);
         let num = document.getElementById('w-number').value;
-        if(amount < 50) return alert("মিনিমাম ৫০ টাকা!");
+        let method = document.getElementById('w-method').value;
+
+        if(!amount || amount < 50) return alert("মিনিমাম ৫০ টাকা উইথড্র করুন!");
+        if(!num) return alert("ফোন নাম্বার দিন!");
+        
+        // ব্যালেন্স চেক
+        if(amount > currentBalance) {
+            return alert("আপনার পর্যাপ্ত ব্যালেন্স নেই! বর্তমান ব্যালেন্স: " + currentBalance + " TK");
+        }
+
+        const btn = document.getElementById('withdraw-btn');
+        btn.disabled = true;
+        btn.innerText = "Processing...";
+
         const id = Date.now();
-        database.ref('withdraws/' + id).set({ user: userId, amount: amount, num: num, status: 'Pending', time: new Date().toLocaleString() });
-        database.ref('history/' + userId + '/' + id).set({ info: num, amount: amount, type: 'WITHDRAW', status: 'Pending', date: new Date().toLocaleString() });
-        alert("উইথড্র রিকোয়েস্ট পাঠানো হয়েছে!"); location.reload();
+        const newBalance = currentBalance - amount;
+
+        // ১. ডাটাবেসে ব্যালেন্স আপডেট করা (কমানো)
+        database.ref('users/' + userId).update({
+            balance: newBalance
+        }).then(() => {
+            // ২. উইথড্র রিকোয়েস্ট লিস্টে পাঠানো
+            database.ref('withdraws/' + id).set({ 
+                user: userId, 
+                amount: amount, 
+                num: num, 
+                method: method,
+                status: 'Pending', 
+                time: new Date().toLocaleString() 
+            });
+
+            // ৩. হিস্টোরিতে সেভ করা
+            database.ref('history/' + userId + '/' + id).set({ 
+                info: method + ": " + num, 
+                amount: amount, 
+                type: 'WITHDRAW', 
+                status: 'Pending', 
+                date: new Date().toLocaleString() 
+            });
+
+            alert("উইথড্র রিকোয়েস্ট সফল হয়েছে! " + amount + " টাকা কেটে নেওয়া হয়েছে।");
+            showSection('home');
+        }).catch(err => {
+            alert("কিছু সমস্যা হয়েছে, আবার চেষ্টা করুন।");
+            btn.disabled = false;
+            btn.innerText = "WITHDRAW REQUEST";
+        });
     }
+
     function renderHistory(data) {
-        const list = document.getElementById('history-list'); list.innerHTML = "";
+        const list = document.getElementById('history-list'); 
+        list.innerHTML = "";
+        if(!data) { list.innerHTML = "<p class='text-center opacity-30'>No history found</p>"; return; }
+        
         for(let id in data) {
             const item = data[id];
             list.innerHTML += `<div class="card-gradient p-4 rounded-2xl flex justify-between items-center border-l-4 ${item.status==='Success'?'border-green-500':'border-yellow-500'}">
@@ -142,8 +210,11 @@
             </div>`;
         }
     }
+
     loadData();
-    setInterval(() => { document.getElementById('current-time').innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); }, 1000);
+    setInterval(() => { 
+        document.getElementById('current-time').innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); 
+    }, 1000);
 </script>
 </body>
 </html>
